@@ -1,0 +1,38 @@
+version: '2.3'
+services:
+  api:
+    build: openeats-api/
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+      env_dev.list
+    volumes:
+      - ./openeats-api:./persistence/code
+      - static-files:./persistence/code/static-files
+      - site-media:./persistence/code/site-media
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+  web:
+    build: openeats-web/
+    command: yarn dev
+    env_file:
+      env_dev.list
+    volumes:
+      - ./openeats-web:./persistence/code
+    depends_on:
+      - api
+    ports:
+      - "8080:8080"
+  db:
+    image: mariadb
+    env_file:
+      env_dev.list
+    volumes:
+      - database:/var/lib/mysql
+    ports:
+      - "3306:3306"
+volumes:
+  database:
+  static-files:
+  site-media:
