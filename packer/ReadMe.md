@@ -11,7 +11,7 @@ Install Packer <https://developer.hashicorp.com/packer/tutorials/docker-get-sta
 
 Create resource group
 
-`az group create -n myResourceGroup -l eastus`
+`az group create -n packerDemoRG -l eastus`
 
 Create service principal
 
@@ -27,27 +27,34 @@ Optional: Upgrade JSON tempate below to HCL2: `packer hcl2_upgrade my-template.
 
 [HCL2 Template](./ubuntu.json.pkr.hcl)
 
+Initializer packer
+`packer init ubuntu.json.pkr.hcl`
+
 Build packer image
 
 ```
-sudo ./packer build ubuntu.json
+packer build ubuntu.json.pkr.hcl
 
 ```
 
 Create VM From Azure Image
 
 ```
-az vm create --resource-group myResourceGroup --name myVM --image myPackerImage --admin-username azureuser --generate-ssh-keys
+az vm create --resource-group packerDemoRG --name myVM --image myPackerImage --admin-username azureuser --generate-ssh-keys
 
 ```
 
 Open port
 
 ```
-az vm open-port --resource-group myResourceGroup --name myVM --port 80
+az vm open-port --resource-group packerDemoRG --name myVM --port 80
 
 ```
 
 Browse to url
 
 `http://publicIpAddress`
+
+
+Cleanup
+` az group delete -n packerDemoRG -y`
