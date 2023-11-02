@@ -44,7 +44,7 @@ az vm create --resource-group packerDemoRG --name myVM --image myPackerImage --a
 Open port
 
 ```
-az vm open-port --resource-group packerDemoRG --name myVM --port 80
+az vm open-port --resource-group packerDemoRG --name myVM --port 8000
 
 ```
 
