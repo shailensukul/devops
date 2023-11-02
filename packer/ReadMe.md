@@ -32,10 +32,7 @@ Initializer packer
 
 Build packer image
 
-```
-packer build ubuntu.json.pkr.hcl
-
-```
+`packer build ubuntu.json.pkr.hcl`
 
 Create VM From Azure Image
 
@@ -57,4 +54,4 @@ Browse to url
 
 
 Cleanup
-` az group delete -n packerDemoRG -y`
+`az group delete -n packerDemoRG -y`

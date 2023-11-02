@@ -32,4 +32,4 @@ rm nodesource_setup.sh
 git clone https://github.com/shailensukul/devops.git /home/ubuntu/app
 # sudo docker build -t application /home/ubuntu/app
 # start the docker containers
-sudo docker compose -f ./openeats/docker-prod.yml -f ./openeats/docker-prod.version.yml -f ./openeats/docker-prod.override.yml up
+sudo docker compose -f /home/ubuntu/app/packer/openeats/docker-prod.yml -f /home/ubuntu/app/packer/openeats/docker-prod.version.yml -f /home/ubuntu/app/packer/openeats/docker-prod.override.yml up -d
