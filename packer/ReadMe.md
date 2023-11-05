@@ -55,3 +55,12 @@ Browse to url
 
 Cleanup
 `az group delete -n packerDemoRG -y`
+
+# Remove all containers and volumes
+`docker stop $(docker ps -a -q) `
+
+`docker rm $(docker ps -aq)`
+
+ `docker volume prune`
+
+ `docker system prune -a`
