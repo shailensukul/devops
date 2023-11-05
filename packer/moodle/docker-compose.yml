@@ -10,6 +10,7 @@ services:
       - ALLOW_EMPTY_PASSWORD=no
       - MARIADB_USER=bn_moodle
       - MARIADB_PASSWORD=gfgdrgfd565457
+      - MARIADB_ROOT_PASSWORD=gffdgrdfg443
       - MARIADB_DATABASE=bitnami_moodle
       - MARIADB_CHARACTER_SET=utf8mb4
       - MARIADB_COLLATE=utf8mb4_unicode_ci

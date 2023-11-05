@@ -11,7 +11,7 @@ Install Packer <https://developer.hashicorp.com/packer/tutorials/docker-get-sta
 
 Create resource group
 
-`az group create -n packerDemoRG -l eastus`
+`az group create -n moodleRG -l eastus`
 
 Create service principal
 
@@ -28,23 +28,23 @@ Optional: Upgrade JSON tempate below to HCL2: `packer hcl2_upgrade my-template.
 [HCL2 Template](./ubuntu.json.pkr.hcl)
 
 Initializer packer
-`packer init ubuntu.json.pkr.hcl`
+`packer init moodle.json.pkr.hcl`
 
 Build packer image
 
-`packer build ubuntu.json.pkr.hcl`
+`packer build moodle.json.pkr.hcl`
 
 Create VM From Azure Image
 
 ```
-az vm create --resource-group packerDemoRG --name myVM --image myPackerImage --admin-username azureuser --generate-ssh-keys
+az vm create --resource-group moodleRG --name moodleVM --image moodleImage --admin-username azureuser --generate-ssh-keys
 
 ```
 
 Open port
 
 ```
-az vm open-port --resource-group packerDemoRG --name myVM --port 8000
+az vm open-port --resource-group moodleRG --name myVM --port 8000
 
 ```
 
@@ -54,7 +54,7 @@ Browse to url
 
 
 Cleanup
-`az group delete -n packerDemoRG -y`
+`az group delete -n moodleRG -y`
 
 # Remove all containers and volumes
 `docker stop $(docker ps -a -q) `
@@ -64,3 +64,8 @@ Cleanup
  `docker volume prune`
 
  `docker system prune -a`
+
+ Moodle
+
+  Default: user
+password: bitnami
