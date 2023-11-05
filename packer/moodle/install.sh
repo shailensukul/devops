@@ -32,4 +32,4 @@ rm nodesource_setup.sh
 git clone https://github.com/shailensukul/devops.git /home/ubuntu/app
 # sudo docker build -t application /home/ubuntu/app
 # start the docker containers
-sudo docker compose -f /home/ubuntu/app/packer/moodle/docker-compose.yml -d
+sudo docker compose -f /home/ubuntu/app/packer/moodle/docker-compose.yml up -d

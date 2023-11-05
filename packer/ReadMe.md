@@ -44,7 +44,7 @@ az vm create --resource-group moodleRG --name moodleVM --image moodleImage --adm
 Open port
 
 ```
-az vm open-port --resource-group moodleRG --name myVM --port 8000
+az vm open-port --resource-group moodleRG --name moodleVM --port 8000
 
 ```
 
@@ -65,7 +65,13 @@ Cleanup
 
  `docker system prune -a`
 
- Moodle
+ # Moodle Details
 
-  Default: user
-password: bitnami
+Default: user
+Default password: bitnami
+
+user id : shailen
+password: exam123
+
+user id : shaiden
+password: Shaiden123!
