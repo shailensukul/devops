@@ -13,7 +13,7 @@ Create resource group
 
 `az group create -n moodleRG -l eastus`
 
-Create storage
+Create storage (skip this for now)
 # Change these four parameters as needed
 ACI_PERS_RESOURCE_GROUP=moodleRG
 ACI_PERS_STORAGE_ACCOUNT_NAME=moodlestorage$RANDOM
