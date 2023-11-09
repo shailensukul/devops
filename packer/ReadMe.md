@@ -9,29 +9,38 @@ Install Packer <https://developer.hashicorp.com/packer/tutorials/docker-get-sta
 
 `choco install packer`
 
-Create resource group
-
-`az group create -n moodleRG -l eastus`
-
 Create storage (skip this for now)
 # Change these four parameters as needed
-ACI_PERS_RESOURCE_GROUP=moodleRG
+MOODLE_RESOURCE_GROUP=moodleRG
+MOODLE_DB_NAME=moodledb$RANDOM
+MOODLE_DB_USER=dbadmin
+MOODLE_DB_USER_PWD=f4fGDsgr4$332
+MOODLE_DB_SKU=B_Gen5_1
+MOODLE_LOCATION=eastus
+MOODLE_VM_NAME=moodleVM
+
+Create resource group
+
+`az group create -n $MOODLE_RESOURCE_GROUP -l $MOODLE_LOCATION`
+
 ACI_PERS_STORAGE_ACCOUNT_NAME=moodlestorage$RANDOM
 ACI_PERS_LOCATION=eastus
 ACI_PERS_SHARE_NAME=moodleshare
 
 # Create the storage account with the parameters
-az storage account create --resource-group $ACI_PERS_RESOURCE_GROUP --name $ACI_PERS_STORAGE_ACCOUNT_NAME --location $ACI_PERS_LOCATION --sku Standard_LRS
+az storage account create --resource-group $MOODLE_RESOURCE_GROUP --name $ACI_PERS_STORAGE_ACCOUNT_NAME --location $ACI_PERS_LOCATION --sku Standard_LRS --enable-large-file-share --output none
+
 
 # Create the file share
-az storage share create --name $ACI_PERS_SHARE_NAME --account-name $ACI_PERS_STORAGE_ACCOUNT_NAME
+shareName="moodleshare"
 
+az storage share-rm create --resource-group $MOODLE_RESOURCE_GROUP --storage-account $ACI_PERS_STORAGE_ACCOUNT_NAME --name $shareName --access-tier "TransactionOptimized" --quota 1024 --output none
 
 To mount an Azure file share as a volume in Azure Container Instances, you need three values: the storage account name, the share name, and the storage access key.
 
 echo $ACI_PERS_STORAGE_ACCOUNT_NAME
 
-STORAGE_KEY=$(az storage account keys list --resource-group $ACI_PERS_RESOURCE_GROUP --account-name $ACI_PERS_STORAGE_ACCOUNT_NAME --query "[0].value" --output tsv)
+STORAGE_KEY=$(az storage account keys list --resource-group $MOODLE_RESOURCE_GROUP --account-name $ACI_PERS_STORAGE_ACCOUNT_NAME --query "[0].value" --output tsv)
 echo $STORAGE_KEY
 
 echo $ACI_PERS_SHARE_NAME
@@ -44,6 +53,10 @@ Subscription id
 
 `az account show --query "{ subscription_id: id }"`
 
+Create Managed Database
+```
+az mysql server create --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_DB_NAME --location $MOODLE_LOCATION --admin-user $MOODLE_DB_USER --admin-password $MOODLE_DB_USER_PWD --sku-name $MOODLE_DB_SKU
+```
 Define packer template
 
 Optional: Upgrade JSON tempate below to HCL2: `packer hcl2_upgrade my-template.json`
@@ -60,14 +73,14 @@ Build packer image
 Create VM From Azure Image
 
 ```
-az vm create --resource-group moodleRG --name moodleVM --image moodleImage --admin-username azureuser --generate-ssh-keys
+az vm create --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_VM_NAME --image moodleImage --admin-username azureuser --generate-ssh-keys
 
 ```
 
 Open port
 
 ```
-az vm open-port --resource-group moodleRG --name moodleVM --port 80
+az vm open-port --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_VM_NAME --port 80
 ```
 
 Browse to url
@@ -76,8 +89,11 @@ Browse to url
 
 https://stackoverflow.com/questions/73228021/bitnami-moodle-container-does-not-connec-to-maria-db
 
+Auto mount file shares
+https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-use-files-linux?tabs=Ubuntu%2Csmb311#automatically-mount-file-shares
+
 Cleanup
-`az group delete -n moodleRG -y`
+`az group delete -n $MOODLE_RESOURCE_GROUP -y`
 
 # Remove all containers and volumes
 `docker stop $(docker ps -a -q)`
