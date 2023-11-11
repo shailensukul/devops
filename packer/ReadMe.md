@@ -1,5 +1,19 @@
+# Change these four parameters as needed
+MOODLE_RESOURCE_GROUP=moodleRG
+MOODLE_DB_NAME=moodledb$RANDOM
+MOODLE_DB_USER=dbadmin
+MOODLE_DB_USER_PWD=f4fGDsgr4$332
+MOODLE_DB_SKU=Standard_B1ms
+MOODLE_LOCATION=eastus
+MOODLE_VM_NAME=moodleVM
+MOODLE_PERS_STORAGE_ACCOUNT_NAME=moodlestorage$RANDOM
+MOODLE_PERS_LOCATION=eastus
+MOODLE_PERS_SHARE_NAME=moodleshare
+MOODLE_VIRTUAL_NETWORK=moodlevirtualnetwork
+MOODLE_VIRTUAL_SUBNET=moodlesubnet
+
 # Packer
-A test folder to leaern Packer
+A test folder to learn Packer
 
 [Gist reference](https://gist.github.com/shailensukul/fdb0d853248e5fc331c29dcad1d753b9)
 
@@ -9,41 +23,10 @@ Install Packer <https://developer.hashicorp.com/packer/tutorials/docker-get-sta
 
 `choco install packer`
 
-Create storage (skip this for now)
-# Change these four parameters as needed
-MOODLE_RESOURCE_GROUP=moodleRG
-MOODLE_DB_NAME=moodledb$RANDOM
-MOODLE_DB_USER=dbadmin
-MOODLE_DB_USER_PWD=f4fGDsgr4$332
-MOODLE_DB_SKU=B_Gen5_1
-MOODLE_LOCATION=eastus
-MOODLE_VM_NAME=moodleVM
-
 Create resource group
 
 `az group create -n $MOODLE_RESOURCE_GROUP -l $MOODLE_LOCATION`
 
-ACI_PERS_STORAGE_ACCOUNT_NAME=moodlestorage$RANDOM
-ACI_PERS_LOCATION=eastus
-ACI_PERS_SHARE_NAME=moodleshare
-
-# Create the storage account with the parameters
-az storage account create --resource-group $MOODLE_RESOURCE_GROUP --name $ACI_PERS_STORAGE_ACCOUNT_NAME --location $ACI_PERS_LOCATION --sku Standard_LRS --enable-large-file-share --output none
-
-
-# Create the file share
-shareName="moodleshare"
-
-az storage share-rm create --resource-group $MOODLE_RESOURCE_GROUP --storage-account $ACI_PERS_STORAGE_ACCOUNT_NAME --name $shareName --access-tier "TransactionOptimized" --quota 1024 --output none
-
-To mount an Azure file share as a volume in Azure Container Instances, you need three values: the storage account name, the share name, and the storage access key.
-
-echo $ACI_PERS_STORAGE_ACCOUNT_NAME
-
-STORAGE_KEY=$(az storage account keys list --resource-group $MOODLE_RESOURCE_GROUP --account-name $ACI_PERS_STORAGE_ACCOUNT_NAME --query "[0].value" --output tsv)
-echo $STORAGE_KEY
-
-echo $ACI_PERS_SHARE_NAME
 
 Create service principal
 
@@ -53,9 +36,24 @@ Subscription id
 
 `az account show --query "{ subscription_id: id }"`
 
-Create Managed Database
+# Create a virtual network
+az network vnet create \
+    --name $MOODLE_VIRTUAL_NETWORK \
+    --resource-group $MOODLE_RESOURCE_GROUP \
+    --address-prefix 10.0.0.0/16 \
+    --subnet-name $MOODLE_VIRTUAL_SUBNET \
+    --subnet-prefixes 10.0.0.0/24
+
+# Create the Managed Database
+
+List all available SKUs for a given region
 ```
-az mysql server create --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_DB_NAME --location $MOODLE_LOCATION --admin-user $MOODLE_DB_USER --admin-password $MOODLE_DB_USER_PWD --sku-name $MOODLE_DB_SKU
+az mysql flexible-server list-skus -l $MOODLE_LOCATION 
+```
+
+Create the db
+```
+az mysql flexible-server create --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_DB_NAME --location $MOODLE_LOCATION --admin-user $MOODLE_DB_USER --admin-password $MOODLE_DB_USER_PWD --sku-name $MOODLE_DB_SKU --tier Burstable --iops 500 --storage-size 32  --zone 1  --yes --vnet $MOODLE_VIRTUAL_NETWORK --subnet $MOODLE_VIRTUAL_SUBNET
 ```
 Define packer template
 
