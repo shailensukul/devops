@@ -1,6 +1,6 @@
 # Change these four parameters as needed
-MOODLE_RESOURCE_GROUP=moodleRG
-MOODLE_DB_NAME=moodledb$RANDOM
+MOODLE_RESOURCE_GROUP=moodleRG 
+MOODLE_DB_NAME=moodledb$RANDOM 
 MOODLE_DB_USER=dbadmin
 MOODLE_DB_USER_PWD=f4fGDsgr4$332
 MOODLE_DB_SKU=Standard_B1ms
@@ -11,6 +11,7 @@ MOODLE_PERS_LOCATION=eastus
 MOODLE_PERS_SHARE_NAME=moodleshare
 MOODLE_VIRTUAL_NETWORK=moodlevirtualnetwork
 MOODLE_VIRTUAL_SUBNET=moodlesubnet
+MOODLE_VIRTUAL_SUBNET_DB=moodledbsubnet
 
 # Packer
 A test folder to learn Packer
@@ -44,6 +45,15 @@ az network vnet create \
     --subnet-name $MOODLE_VIRTUAL_SUBNET \
     --subnet-prefixes 10.0.0.0/24
 
+# Create a subnet for the managed database
+```
+az network vnet subnet create \
+--resource-group $MOODLE_RESOURCE_GROUP \
+ --vnet-name $MOODLE_VIRTUAL_NETWORK \
+ --name $MOODLE_VIRTUAL_SUBNET_DB \
+  --address-prefixes 10.0.1.0/24 
+```
+
 # Create the Managed Database
 
 List all available SKUs for a given region
@@ -53,7 +63,7 @@ az mysql flexible-server list-skus -l $MOODLE_LOCATION
 
 Create the db
 ```
-az mysql flexible-server create --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_DB_NAME --location $MOODLE_LOCATION --admin-user $MOODLE_DB_USER --admin-password $MOODLE_DB_USER_PWD --sku-name $MOODLE_DB_SKU --tier Burstable --iops 500 --storage-size 32  --zone 1  --yes --vnet $MOODLE_VIRTUAL_NETWORK --subnet $MOODLE_VIRTUAL_SUBNET
+az mysql flexible-server create --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_DB_NAME --location $MOODLE_LOCATION --admin-user $MOODLE_DB_USER --admin-password $MOODLE_DB_USER_PWD --sku-name $MOODLE_DB_SKU --tier Burstable --iops 500 --storage-size 32  --zone 1  --yes --vnet $MOODLE_VIRTUAL_NETWORK --subnet $MOODLE_VIRTUAL_SUBNET_DB
 ```
 Define packer template
 
@@ -71,7 +81,11 @@ Build packer image
 Create VM From Azure Image
 
 ```
-az vm create --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_VM_NAME --image moodleImage --admin-username azureuser --generate-ssh-keys
+az vm create --resource-group $MOODLE_RESOURCE_GROUP \
+--name $MOODLE_VM_NAME --image moodleImage \
+--admin-username azureuser --generate-ssh-keys \
+--vnet-name $MOODLE_VIRTUAL_NETWORK \
+  --subnet $MOODLE_VIRTUAL_SUBNET 
 
 ```
 
