@@ -43,6 +43,7 @@ services:
       - MOODLE_PASSWORD=exam123
       # ALLOW_EMPTY_PASSWORD is recommended only for development.
       - ALLOW_EMPTY_PASSWORD=no
+      - MOODLE_DATABASE_TYPE=mysqli
 #    volumes:
 #      - 'moodle_data:/bitnami/moodle'
 #      - 'moodledata_data:/bitnami/moodledata'

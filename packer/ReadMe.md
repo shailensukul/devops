@@ -1,17 +1,19 @@
 # Change these four parameters as needed
-MOODLE_RESOURCE_GROUP=moodleRG 
-MOODLE_DB_NAME=moodledb$RANDOM 
-MOODLE_DB_USER=dbadmin
-MOODLE_DB_USER_PWD=f4fGDsgr4$332
-MOODLE_DB_SKU=Standard_B1ms
-MOODLE_LOCATION=eastus
-MOODLE_VM_NAME=moodleVM
-MOODLE_PERS_STORAGE_ACCOUNT_NAME=moodlestorage$RANDOM
-MOODLE_PERS_LOCATION=eastus
-MOODLE_PERS_SHARE_NAME=moodleshare
-MOODLE_VIRTUAL_NETWORK=moodlevirtualnetwork
-MOODLE_VIRTUAL_SUBNET=moodlesubnet
-MOODLE_VIRTUAL_SUBNET_DB=moodledbsubnet
+MOODLE_RESOURCE_GROUP=moodleRG \
+MOODLE_DB_SERVER_NAME=moodledb$RANDOM \
+MOODLE_DB_USER=dbadmin \
+MOODLE_DB_USER_PWD=f4fGDsgr4$332 \
+MOODLE_DB_SKU=Standard_B1ms \
+MOODLE_LOCATION=eastus \
+MOODLE_VM_NAME=moodleVM \
+MOODLE_PERS_STORAGE_ACCOUNT_NAME=moodlestorage$RANDOM \
+MOODLE_PERS_LOCATION=eastus \
+MOODLE_PERS_SHARE_NAME=moodleshare \
+MOODLE_VIRTUAL_NETWORK=moodlevirtualnetwork \
+MOODLE_VIRTUAL_SUBNET=moodlesubnet \
+MOODLE_VIRTUAL_SUBNET_DB=moodledbsubnet \
+MOODLE_DB_NIC=moodledbnic
+MOODLE_PRIVATE_ENDPOINT=moodleprivateendpoint
 
 # Packer
 A test folder to learn Packer
@@ -38,12 +40,14 @@ Subscription id
 `az account show --query "{ subscription_id: id }"`
 
 # Create a virtual network
+```
 az network vnet create \
     --name $MOODLE_VIRTUAL_NETWORK \
     --resource-group $MOODLE_RESOURCE_GROUP \
     --address-prefix 10.0.0.0/16 \
     --subnet-name $MOODLE_VIRTUAL_SUBNET \
     --subnet-prefixes 10.0.0.0/24
+```
 
 # Create a subnet for the managed database
 ```
@@ -54,6 +58,11 @@ az network vnet subnet create \
   --address-prefixes 10.0.1.0/24 
 ```
 
+# Create a NIC to connect the VM to the database subnet
+```
+az network nic create -g $MOODLE_RESOURCE_GROUP --vnet-name $MOODLE_VIRTUAL_NETWORK --subnet $MOODLE_VIRTUAL_SUBNET_DB -n $MOODLE_DB_NIC
+```
+
 # Create the Managed Database
 
 List all available SKUs for a given region
@@ -61,10 +70,23 @@ List all available SKUs for a given region
 az mysql flexible-server list-skus -l $MOODLE_LOCATION 
 ```
 
-Create the db
+Create the db server
 ```
-az mysql flexible-server create --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_DB_NAME --location $MOODLE_LOCATION --admin-user $MOODLE_DB_USER --admin-password $MOODLE_DB_USER_PWD --sku-name $MOODLE_DB_SKU --tier Burstable --iops 500 --storage-size 32  --zone 1  --yes --vnet $MOODLE_VIRTUAL_NETWORK --subnet $MOODLE_VIRTUAL_SUBNET_DB
+az mysql flexible-server create \
+--resource-group $MOODLE_RESOURCE_GROUP \
+--name $MOODLE_DB_SERVER_NAME \
+--location $MOODLE_LOCATION \
+--admin-user $MOODLE_DB_USER \
+--admin-password $MOODLE_DB_USER_PWD \
+--sku-name $MOODLE_DB_SKU \
+--tier Burstable \
+--iops 500 \
+--storage-size 32  \
+--zone 1 --yes \
+--vnet $MOODLE_VIRTUAL_NETWORK \
+--subnet $MOODLE_VIRTUAL_SUBNET_DB
 ```
+
 Define packer template
 
 Optional: Upgrade JSON tempate below to HCL2: `packer hcl2_upgrade my-template.json`
@@ -85,8 +107,23 @@ az vm create --resource-group $MOODLE_RESOURCE_GROUP \
 --name $MOODLE_VM_NAME --image moodleImage \
 --admin-username azureuser --generate-ssh-keys \
 --vnet-name $MOODLE_VIRTUAL_NETWORK \
-  --subnet $MOODLE_VIRTUAL_SUBNET 
+  --subnet $MOODLE_VIRTUAL_SUBNET \
+  --nics $MOODLE_DB_NIC
 
+```
+
+# https://learn.microsoft.com/en-us/azure/mysql/single-server/how-to-configure-private-link-cli
+# Create a private endpoint
+```
+az network private-endpoint create \
+ --name $MOODLE_PRIVATE_ENDPOINT 
+ --resource-group $MOODLE_RESOURCE_GROUP \
+ --vnet-name $MOODLE_VIRTUAL_NETWORK \
+ --subnet $MOODLE_VIRTUAL_SUBNET_DB \
+ --connection-name MyConnectionName \
+ --private-connection-resource-id $(az resource show -g $MOODLE_RESOURCE_GROUP -n $MOODLE_DB_SERVER_NAME --resource-type "Microsoft.DBforMySQL/servers" --query "id" -o tsv) \
+ --group-id mysqlServer \  
+ --connection-name myConnection
 ```
 
 Open port
@@ -105,7 +142,9 @@ Auto mount file shares
 https://learn.microsoft.com/en-us/azure/storage/files/storage-how-to-use-files-linux?tabs=Ubuntu%2Csmb311#automatically-mount-file-shares
 
 Cleanup
-`az group delete -n $MOODLE_RESOURCE_GROUP -y`
+```
+az group delete -n $MOODLE_RESOURCE_GROUP -y
+```
 
 # Remove all containers and volumes
 `docker stop $(docker ps -a -q)`
