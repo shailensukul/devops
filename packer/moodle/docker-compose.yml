@@ -32,11 +32,11 @@ services:
       - '443:8443'
     environment:
       - BITNAMI_DEBUG=true
-      - MOODLE_DATABASE_HOST=moodledb15867.mysql.database.azure.com
+      - MOODLE_DATABASE_HOST=moodledb20402.mysql.database.azure.com
       - MOODLE_DATABASE_PORT_NUMBER=3306
       - MOODLE_DATABASE_USER=dbadmin
-      - MOODLE_DATABASE_PASSWORD=f4fGDsgr4$332
-      - MOODLE_DATABASE_ROOT_PASSWORD=f4fGDsgr4$332
+      - MOODLE_DATABASE_PASSWORD=f4fGDsgr4332
+      - MOODLE_DATABASE_ROOT_PASSWORD=f4fGDsgr4332
       - MOODLE_DATABASE_NAME=bitnami_moodle
       - MOODLE_SITE_NAME=Learning Buddy
       - MOODLE_USERNAME=shailen

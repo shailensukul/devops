@@ -12,8 +12,8 @@ MOODLE_PERS_SHARE_NAME=moodleshare \
 MOODLE_VIRTUAL_NETWORK=moodlevirtualnetwork \
 MOODLE_VIRTUAL_SUBNET=moodlesubnet \
 MOODLE_VIRTUAL_SUBNET_DB=moodledbsubnet \
-MOODLE_DB_NIC=moodledbnic
-MOODLE_PRIVATE_ENDPOINT=moodleprivateendpoint
+MOODLE_DB_NIC=moodledbnic \
+MOODLE_PRIVATE_ENDPOINT=moodleprivateendpoint 
 
 # Packer
 A test folder to learn Packer
@@ -28,8 +28,9 @@ Install Packer <https://developer.hashicorp.com/packer/tutorials/docker-get-sta
 
 Create resource group
 
-`az group create -n $MOODLE_RESOURCE_GROUP -l $MOODLE_LOCATION`
-
+```
+az group create -n $MOODLE_RESOURCE_GROUP -l $MOODLE_LOCATION
+```
 
 Create service principal
 
@@ -55,14 +56,18 @@ az network vnet subnet create \
 --resource-group $MOODLE_RESOURCE_GROUP \
  --vnet-name $MOODLE_VIRTUAL_NETWORK \
  --name $MOODLE_VIRTUAL_SUBNET_DB \
-  --address-prefixes 10.0.1.0/24 
+  --address-prefixes 10.0.1.0/24
+ ```
+  
+# Disable subnet private endpoint policies
+ ```
+az network vnet subnet update \
+ --name $MOODLE_VIRTUAL_SUBNET_DB \
+ --resource-group $MOODLE_RESOURCE_GROUP \
+ --vnet-name $MOODLE_VIRTUAL_NETWORK \
+ --disable-private-endpoint-network-policies true
 ```
-
-# Create a NIC to connect the VM to the database subnet
-```
-az network nic create -g $MOODLE_RESOURCE_GROUP --vnet-name $MOODLE_VIRTUAL_NETWORK --subnet $MOODLE_VIRTUAL_SUBNET_DB -n $MOODLE_DB_NIC
-```
-
+ 
 # Create the Managed Database
 
 List all available SKUs for a given region
@@ -70,6 +75,8 @@ List all available SKUs for a given region
 az mysql flexible-server list-skus -l $MOODLE_LOCATION 
 ```
 
+TODO: Set require_secure_transport to OFF
+- Create the bitnami_moodle db
 Create the db server
 ```
 az mysql flexible-server create \
@@ -84,7 +91,13 @@ az mysql flexible-server create \
 --storage-size 32  \
 --zone 1 --yes \
 --vnet $MOODLE_VIRTUAL_NETWORK \
---subnet $MOODLE_VIRTUAL_SUBNET_DB
+--subnet $MOODLE_VIRTUAL_SUBNET_DB \
+--version 8.0.21 \
+--tags "require_secure_transport=OFF"
+```
+
+```
+az mysql flexible-server db create --resource-group $MOODLE_RESOURCE_GROUP --server-name moodledb20402 --database-name bitnami_moodle
 ```
 
 Define packer template
@@ -98,7 +111,9 @@ Initializer packer
 
 Build packer image
 
-`packer build moodle.json.pkr.hcl`
+```
+packer build moodle.json.pkr.hcl
+```
 
 Create VM From Azure Image
 
@@ -107,23 +122,9 @@ az vm create --resource-group $MOODLE_RESOURCE_GROUP \
 --name $MOODLE_VM_NAME --image moodleImage \
 --admin-username azureuser --generate-ssh-keys \
 --vnet-name $MOODLE_VIRTUAL_NETWORK \
-  --subnet $MOODLE_VIRTUAL_SUBNET \
-  --nics $MOODLE_DB_NIC
+  --subnet $MOODLE_VIRTUAL_SUBNET 
+  #--nics $MOODLE_DB_NIC
 
-```
-
-# https://learn.microsoft.com/en-us/azure/mysql/single-server/how-to-configure-private-link-cli
-# Create a private endpoint
-```
-az network private-endpoint create \
- --name $MOODLE_PRIVATE_ENDPOINT 
- --resource-group $MOODLE_RESOURCE_GROUP \
- --vnet-name $MOODLE_VIRTUAL_NETWORK \
- --subnet $MOODLE_VIRTUAL_SUBNET_DB \
- --connection-name MyConnectionName \
- --private-connection-resource-id $(az resource show -g $MOODLE_RESOURCE_GROUP -n $MOODLE_DB_SERVER_NAME --resource-type "Microsoft.DBforMySQL/servers" --query "id" -o tsv) \
- --group-id mysqlServer \  
- --connection-name myConnection
 ```
 
 Open port
@@ -135,6 +136,17 @@ az vm open-port --resource-group $MOODLE_RESOURCE_GROUP --name $MOODLE_VM_NAME -
 Browse to url
 
 `http://publicIpAddress`
+
+
+Check connectivity to mysql
+```
+sudo apt install mysql-client-core-8.0
+```
+
+```
+mysql --host=moodledb21806.mysql.database.azure.com --user=dbadmin --password=f4fGDsgr4$332 mysql
+```
+
 
 https://stackoverflow.com/questions/73228021/bitnami-moodle-container-does-not-connec-to-maria-db
 
