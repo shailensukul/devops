@@ -2,7 +2,7 @@
 MOODLE_RESOURCE_GROUP=moodleRG \
 MOODLE_DB_SERVER_NAME=moodledb$RANDOM \
 MOODLE_DB_USER=dbadmin \
-MOODLE_DB_USER_PWD=f4fGDsgr4$332 \
+MOODLE_DB_USER_PWD=f4fGDsgr4332 \
 MOODLE_DB_SKU=Standard_B1ms \
 MOODLE_LOCATION=eastus \
 MOODLE_VM_NAME=moodleVM \
@@ -19,7 +19,6 @@ MOODLE_PRIVATE_ENDPOINT=moodleprivateendpoint
 A test folder to learn Packer
 
 [Gist reference](https://gist.github.com/shailensukul/fdb0d853248e5fc331c29dcad1d753b9)
-
 <https://learn.microsoft.com/en-us/azure/virtual-machines/linux/build-image-with-packer>
 
 Install Packer <https://developer.hashicorp.com/packer/tutorials/docker-get-started/get-started-install-cli>
@@ -75,8 +74,6 @@ List all available SKUs for a given region
 az mysql flexible-server list-skus -l $MOODLE_LOCATION 
 ```
 
-TODO: Set require_secure_transport to OFF
-- Create the bitnami_moodle db
 Create the db server
 ```
 az mysql flexible-server create \
@@ -98,6 +95,7 @@ az mysql flexible-server create \
 
 ```
 az mysql flexible-server db create --resource-group $MOODLE_RESOURCE_GROUP --server-name moodledb20402 --database-name bitnami_moodle
+az mysql server configuration set --name require_secure_transport --resource-group $MOODLE_RESOURCE_GROUP  --server moodledb20402 --value OFF
 ```
 
 Define packer template
@@ -123,8 +121,6 @@ az vm create --resource-group $MOODLE_RESOURCE_GROUP \
 --admin-username azureuser --generate-ssh-keys \
 --vnet-name $MOODLE_VIRTUAL_NETWORK \
   --subnet $MOODLE_VIRTUAL_SUBNET 
-  #--nics $MOODLE_DB_NIC
-
 ```
 
 Open port
